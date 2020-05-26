@@ -71,6 +71,8 @@ P3 = Point(60,240)
 P4 = Point(-50,240)
 DrawWireframeTriangle(P1,P3, P4, red)
 
+DrawWireframeTriangle(P0,P1, P4, blue)
+
 
 
 
