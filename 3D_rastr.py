@@ -16,6 +16,9 @@ BACKGROUND_COLOR = (255,255,255)
 def PutPixel(x, y, color):
     draw.point((Cw/2+x,Ch/2-y), fill=color)
 
+def vector_multiply(A, c):
+    return tuple(map(lambda x: int(x*c), A))
+
 def swap_point(A, B):
     P_t = A
     A = B
@@ -91,17 +94,68 @@ def DrawFilledTriangle (P0, P1, P2, color):
         for x in range(int(x_left[y - P0.y]), int(x_right[y - P0.y])):
             PutPixel(x, y, color)
 
+def DrawShadedTriangle (P0, P1, P2, color):
+    # Сортировка точек так, что y0 <= y1 <= y2
+    if P1.y < P0.y:
+         swap_point(P1, P0)
+    if P2.y < P0.y:
+         swap_point(P2, P0)
+    if P2.y < P1.y:
+        swap_point(P2, P1)
+
+    # Вычисление координат x рёбер треугольника
+    x01 = Interpolate(P0.y, P0.x, P1.y, P1.x)
+    h01 = Interpolate(P0.y, P0.h, P1.y, P1.h)
+
+    x12 = Interpolate(P1.y, P1.x, P2.y, P2.x)
+    h12 = Interpolate(P1.y, P1.h, P2.y, P2.h)
+
+    x02 = Interpolate(P0.y, P0.x, P2.y, P2.x)
+    h02 = Interpolate(P0.y, P0.h, P2.y, P2.h)
+    # Конкатенация коротких сторон
+    x01= x01[:-1]
+    x012 = x01 + x12
+
+    h01 = h01[:-1]
+    h012 = h01 + h12
+
+    # Определяем, какая из сторон левая и правая
+    m = int(len(x012) / 2)
+    if x02[m] < x012[m]: 
+        x_left = x02
+        x_right = x012
+
+        h_left = h02
+        h_right = h012
+    else:
+        x_left = x012
+        x_right = x02
+
+        h_left = h012
+        h_right = h02
+
+    # Отрисовка горизонтальных отрезков
+    for y in range(P0.y, P2.y):
+        x_l = int(x_left[y - P0.y])
+        x_r = int(x_right[y - P0.y])
+        print(x_l, x_r)
+
+        h_segment = Interpolate(x_l, h_left[y - P0.y], x_r, h_right[y - P0.y])
+        for x in range(x_l, x_r):
+            shaded_color = vector_multiply(color, h_segment[x - x_l])
+            PutPixel(x, y, shaded_color)
+
 
 image = Image.new("RGB", (Cw, Ch))
 draw = ImageDraw.Draw(image)
 
-P0 = Point(-200,100)
-P1 = Point(-200,120)
+P0 = Point(-200,100, 0.8)
+P1 = Point(-200,120, 0.7)
 
-P3 = Point(60,240)
-P4 = Point(-50,240)
-DrawWireframeTriangle(P1,P3, P4, red)
-DrawFilledTriangle(P1,P3, P4, red)
+P3 = Point(60,240, 0.2)
+P4 = Point(-50,240,0.4)
+#DrawWireframeTriangle(P1,P3, P4, red)
+DrawShadedTriangle(P1,P3, P4, red)
 #DrawWireframeTriangle(P0,P1, P4, blue)
 
 
